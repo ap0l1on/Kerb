@@ -25,7 +25,7 @@
     "@types/three": "^0.186.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vite-node": "^3.1.0",
+    "vite-node": "^6.0.0",
     "vitest": "^3.1.0"
   }
 }
