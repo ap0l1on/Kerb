@@ -18,7 +18,7 @@ export class SceneManager {
 
   constructor(public canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x334455, 0.9);
     this.scene.add(this.hemi);
     this.dir = new THREE.DirectionalLight(0xffffff, 1.6);

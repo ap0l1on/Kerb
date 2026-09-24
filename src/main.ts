@@ -65,6 +65,7 @@ class Game {
   setArchLit: ((i: number, lit: boolean) => void) | null = null;
   prevCar: CarState = freshCar();
   wheelSpin = 0;
+  lastSteer = 0;
   padEdge = { restart: false, checkpoint: false, camera: false, ghost: false, pause: false };
   paused = false;
   pauseFromRace = false;
@@ -635,7 +636,7 @@ class Game {
         }
       }
       rp.car = rp.race.car;
-      if (this.playerRig) poseCar(this.playerRig, rp.car.x, rp.car.y, rp.car.z, rp.car.yaw, rp.car.pitch, rp.car.roll + (rp.car.loopFlip ? Math.PI : 0), 0, this.wheelSpin);
+      if (this.playerRig) poseCar(this.playerRig, rp.car.x, rp.car.y, rp.car.z, rp.car.yaw, rp.car.pitch, rp.car.roll + (rp.car.loopFlip ? Math.PI : 0), rp.frames[Math.max(0, rp.idx - 1)]?.steer ?? 0, this.wheelSpin);
       this.titleAngle += dt * 0.2;
       this.cam.camera.position.set(rp.car.x + Math.sin(this.titleAngle) * 10, rp.car.y + 4, rp.car.z + Math.cos(this.titleAngle) * 10);
       this.cam.camera.lookAt(rp.car.x, rp.car.y + 1, rp.car.z);
@@ -648,6 +649,7 @@ class Game {
     if (!this.paused) {
       const { alpha } = this.loop.frame(dt, (h) => {
         const inp = quantizeInput(this.input.sample(h));
+        this.lastSteer = inp.steer;
         // Record only racing ticks (ghost alignment starts at GO).
         if (this.race!.phase === 'racing') this.recorder.record(inp);
         this.prevCar = { ...this.race!.car };
@@ -666,7 +668,7 @@ class Game {
       const iy = this.prevCar.y + (c.y - this.prevCar.y) * a;
       const iz = this.prevCar.z + (c.z - this.prevCar.z) * a;
       this.wheelSpin += (c.speedKmh / 3.6) * dt * 2;
-      poseCar(this.playerRig, ix, iy, iz, c.yaw, c.pitch, c.roll + (c.loopFlip ? Math.PI : 0), 0, this.wheelSpin);
+      poseCar(this.playerRig, ix, iy, iz, c.yaw, c.pitch, c.roll + (c.loopFlip ? Math.PI : 0), this.lastSteer, this.wheelSpin);
       // Ghost rig.
       if (this.ghostRig) {
         this.ghostRig.group.visible = this.ghostActive && !!this.ghostRace;
@@ -682,8 +684,8 @@ class Game {
       } else if (this.race.phase === 'countdown') {
         const sy = Math.sin(c.yaw);
         const cy = Math.cos(c.yaw);
-        this.cam.camera.position.set(c.x - sy * 5.5, c.y + 1.9, c.z - cy * 5.5);
-        this.cam.camera.lookAt(c.x + sy * 3, c.y + 0.8, c.z + cy * 3);
+        this.cam.camera.position.set(c.x - sy * 7.0, c.y + 2.4, c.z - cy * 7.0);
+        this.cam.camera.lookAt(c.x + sy * 6, c.y + 1.0, c.z + cy * 6);
       } else {
         this.cam.update(dt, c.x, c.y, c.z, c.yaw, c.speedKmh, c.boostT > 0 && c.boostKind === 'turbo', c.landingShake, () => 1);
         c.landingShake = Math.max(0, c.landingShake - dt * 2);

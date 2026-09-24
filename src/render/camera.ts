@@ -34,8 +34,10 @@ export class ChaseCamera {
   ): void {
     const sy = Math.sin(yaw);
     const cy = Math.cos(yaw);
-    const dist = this.mode === 'chase' ? 5.5 : this.mode === 'far' ? 8 : -0.5;
-    const height = this.mode === 'chase' ? 1.9 : this.mode === 'far' ? 2.8 : 1.15;
+    const dist = this.mode === 'chase' ? 7.0 : this.mode === 'far' ? 9.5 : -0.5;
+    const height = this.mode === 'chase' ? 2.4 : this.mode === 'far' ? 3.2 : 1.15;
+    // Lookahead grows with speed so you can read the track ahead, not the bumper.
+    const ahead = Math.min(20, 6 + speedKmh * 0.045);
     _desired.set(x - sy * dist, y + height, z - cy * dist);
     if (this.mode === 'bonnet') {
       _desired.set(x + sy * 0.4, y + 1.15, z + cy * 0.4);
@@ -43,8 +45,8 @@ export class ChaseCamera {
       _look.set(x + sy * 30, y + 0.4, z + cy * 30);
       this.camera.lookAt(_look);
     } else {
-      // Critically damped-ish follow (frame-rate independent lerp).
-      const k = 1 - Math.exp(-dt * 8);
+      // Tighter follow than before so the car stays planted in frame.
+      const k = 1 - Math.exp(-dt * 10);
       this.camera.position.lerp(_desired, k);
       // Wall clipping: pull camera in.
       _target.set(x, y + 1, z);
@@ -56,7 +58,7 @@ export class ChaseCamera {
           this.camera.position.copy(_target).addScaledVector(_dir, Math.max(0.15, hitT - 0.05));
         }
       }
-      _look.set(x + sy * 3, y + 0.8, z + cy * 3);
+      _look.set(x + sy * ahead, y + 1.0, z + cy * ahead);
       this.camera.lookAt(_look);
     }
     // FOV: 72 at 0 -> 88 at 280 (+8 turbo).

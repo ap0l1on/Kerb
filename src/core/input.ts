@@ -127,7 +127,10 @@ export class Input {
     const k = this.keys;
     const left = k.has(b.left) || k.has(ALT_LEFT);
     const right = k.has(b.right) || k.has(ALT_RIGHT);
-    const target = (left ? -1 : 0) + (right ? 1 : 0);
+    // Physics-space steer: +1 yaws toward world +x. The chase camera looks
+    // along travel, so world +x appears screen-LEFT: screen-right (D) must
+    // produce negative steer. Keep this mapping in exactly one place.
+    const target = (left ? 1 : 0) + (right ? -1 : 0);
     // Steer ramp: 0->full in 80ms, return in 60ms.
     const upRate = dt / 0.08;
     const downRate = dt / 0.06;
@@ -142,7 +145,8 @@ export class Input {
     let checkpoint = k.has(b.checkpoint) || k.has(b.checkpointAlt);
     const pad = this.readPad();
     if (pad) {
-      if (Math.abs(pad.steer) > Math.abs(steer)) steer = pad.steer;
+      // Gamepad stick right (+) is screen-right: negate like the keyboard.
+      if (Math.abs(pad.steer) > Math.abs(steer)) steer = -pad.steer;
       throttle = Math.max(throttle, pad.throttle);
       brake = Math.max(brake, pad.brake);
       if (pad.buttons[3]) respawn = true; // Y
