@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { TrackDef, TrackSample, ThemeId } from './types';
+import { KERB_WIDTH } from './types';
 import { sampleCentreline } from './spline';
 import { TrackCollider } from '../physics/collide';
 
@@ -178,7 +179,8 @@ export function buildTrackMeshes(def: TrackDef, samples: TrackSample[]): TrackMe
   let viK = 0;
   let viW = 0;
   let viB = 0;
-  const KERB_W = 1.0;
+  const KERB_W = KERB_WIDTH;
+  const KERB_LIFT = 0.06;
   for (let i = 0; i < samples.length - 1; i++) {
     const a = samples[i];
     const b = samples[i + 1];
@@ -198,26 +200,32 @@ export function buildTrackMeshes(def: TrackDef, samples: TrackSample[]): TrackMe
     if (a.zone === 'engineOff') cc.set(0x4d1d1d);
     viR = pushQuad(roadPos, roadCol, roadIdx, aL, aR, bL, bR, cc, viR);
     // Kerbs on both edges.
-    const aKL0 = [a.x - a.sx * (hwA + KERB_W), a.y + 0.02, a.z - a.sz * (hwA + KERB_W)];
-    const bKL0 = [b.x - b.sx * (hwB + KERB_W), b.y + 0.02, b.z - b.sz * (hwB + KERB_W)];
-    const aKR0 = [a.x + a.sx * (hwA + KERB_W), a.y + 0.02, a.z + a.sz * (hwA + KERB_W)];
-    const bKR0 = [b.x + b.sx * (hwB + KERB_W), b.y + 0.02, b.z + b.sz * (hwB + KERB_W)];
+    const aKL0 = [a.x - a.sx * (hwA + KERB_W), a.y + KERB_LIFT, a.z - a.sz * (hwA + KERB_W)];
+    const bKL0 = [b.x - b.sx * (hwB + KERB_W), b.y + KERB_LIFT, b.z - b.sz * (hwB + KERB_W)];
+    const aKR0 = [a.x + a.sx * (hwA + KERB_W), a.y + KERB_LIFT, a.z + a.sz * (hwA + KERB_W)];
+    const bKR0 = [b.x + b.sx * (hwB + KERB_W), b.y + KERB_LIFT, b.z + b.sz * (hwB + KERB_W)];
     const kc = seg ? cKerbA : cKerbB;
     viK = pushQuad(kerbPos, kerbCol, kerbIdx, aKL0, aL, bKL0, bL, kc, viK);
     viK = pushQuad(kerbPos, kerbCol, kerbIdx, aR, aKR0, bR, bKR0, kc, viK);
+    // Walls stand OUTSIDE the kerbs (at the kerb outer edge, road height),
+    // so the kerbs stay visible between road and wall.
+    const aWL0 = [a.x - a.sx * (hwA + KERB_W), a.y, a.z - a.sz * (hwA + KERB_W)];
+    const bWL0 = [b.x - b.sx * (hwB + KERB_W), b.y, b.z - b.sz * (hwB + KERB_W)];
+    const aWR0 = [a.x + a.sx * (hwA + KERB_W), a.y, a.z + a.sz * (hwA + KERB_W)];
+    const bWR0 = [b.x + b.sx * (hwB + KERB_W), b.y, b.z + b.sz * (hwB + KERB_W)];
     // Walls.
     if (a.wallL > 0) {
       const h = a.wallL;
-      const aT = [aL[0], aL[1] + h, aL[2]];
-      const bT = [bL[0], bL[1] + h, bL[2]];
-      viW = pushQuad(wallPos, wallCol, wallIdx, aL, bL, aT, bT, cWall, viW);
+      const aT = [aWL0[0], aWL0[1] + h, aWL0[2]];
+      const bT = [bWL0[0], bWL0[1] + h, bWL0[2]];
+      viW = pushQuad(wallPos, wallCol, wallIdx, aWL0, bWL0, aT, bT, cWall, viW);
       viW = pushQuad(wallPos, wallCol, wallIdx, aT, bT, [aT[0] - a.sx * 0.4, aT[1], aT[2] - a.sz * 0.4], [bT[0] - b.sx * 0.4, bT[1], bT[2] - b.sz * 0.4], cWall, viW);
     }
     if (a.wallR > 0) {
       const h = a.wallR;
-      const aT = [aR[0], aR[1] + h, aR[2]];
-      const bT = [bR[0], bR[1] + h, bR[2]];
-      viW = pushQuad(wallPos, wallCol, wallIdx, bR, aR, bT, aT, cWall, viW);
+      const aT = [aWR0[0], aWR0[1] + h, aWR0[2]];
+      const bT = [bWR0[0], bWR0[1] + h, bWR0[2]];
+      viW = pushQuad(wallPos, wallCol, wallIdx, bWR0, aWR0, bT, aT, cWall, viW);
       viW = pushQuad(wallPos, wallCol, wallIdx, [aT[0] + a.sx * 0.4, aT[1], aT[2] + a.sz * 0.4], [bT[0] + b.sx * 0.4, bT[1], bT[2] + b.sz * 0.4], aT, bT, cWall, viW);
     }
     // Base skirt under road.
@@ -252,7 +260,7 @@ export function buildTrackMeshes(def: TrackDef, samples: TrackSample[]): TrackMe
       [cx - ext, gy, cz + ext], [cx + ext, gy, cz + ext], cGround, viB);
   }
   const mat = (emissive: boolean) =>
-    new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, ...(emissive ? { emissive: 0x222222 } : {}) });
+    new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide, ...(emissive ? { emissive: 0x222222 } : {}) });
   const mkMesh = (pos: number[], col: number[], idx: number[]) => {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -270,8 +278,8 @@ export function buildTrackMeshes(def: TrackDef, samples: TrackSample[]): TrackMe
     g.setIndex(kerbIdx);
     g.computeVertexNormals();
     const m = new THREE.Mesh(g, theme.emissive
-      ? new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x661133 })
-      : new THREE.MeshLambertMaterial({ vertexColors: true }));
+      ? new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x661133, side: THREE.DoubleSide })
+      : new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     group.add(m);
   }
   if (wallIdx.length) group.add(mkMesh(wallPos, wallCol, wallIdx));
@@ -281,7 +289,7 @@ export function buildTrackMeshes(def: TrackDef, samples: TrackSample[]): TrackMe
     g.setAttribute('color', new THREE.Float32BufferAttribute(baseCol, 3));
     g.setIndex(baseIdx);
     g.computeVertexNormals();
-    group.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+    group.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide })));
   }
   void mergeGeometries;
   // Checkpoint + zone anchors.

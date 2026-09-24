@@ -64,6 +64,10 @@ export interface TrackDef {
   medals: Medals;
 }
 
+// Kerb (shoulder) strip width on each road edge, in metres. Walls stand at
+// the kerb outer edge; physics and visuals share this constant.
+export const KERB_WIDTH = 1.4;
+
 // A sampled point on the centreline ribbon.
 export interface TrackSample {
   t: number;

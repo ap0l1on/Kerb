@@ -16,7 +16,7 @@ export class ChaseCamera {
   fovOffset = 0;
 
   constructor(aspect: number) {
-    this.camera = new THREE.PerspectiveCamera(72, aspect, 0.1, 3000);
+    this.camera = new THREE.PerspectiveCamera(72, aspect, 0.5, 3000);
   }
 
   cycle(): CamMode {

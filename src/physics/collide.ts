@@ -1,6 +1,7 @@
 // Track collision: road ribbon queries via a spatial hash grid + wall segments.
 // Deterministic: no Math.random, iteration order fixed.
 import type { TrackSample } from '../track/types';
+import { KERB_WIDTH } from '../track/types';
 
 export interface GroundHit {
   y: number;
@@ -222,7 +223,8 @@ export class TrackCollider {
     const ry = py - s.y;
     const rz = pz - s.z;
     const lateral = rx * s.sx + ry * s.sy + rz * s.sz;
-    const half = s.width / 2;
+    // Walls stand at the kerb outer edge (see KERB_WIDTH).
+    const half = s.width / 2 + KERB_WIDTH;
     const margin = 0.9; // car half-width + wall thickness
     let impact = 0;
     const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
