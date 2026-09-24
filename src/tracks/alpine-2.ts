@@ -1,0 +1,46 @@
+// Switchback — Pro / Alpine. Four hairpins down a mountain, ice on one.
+import type { TrackDef } from '../track/types';
+import { P, medals, wallsAll } from './shared';
+
+export const ALPINE_2: TrackDef = {
+  id: 'alpine-2',
+  name: 'Switchback',
+  group: 'pro',
+  theme: 'alpine',
+  path: [
+    P(0, 40, 0, 14),
+    P(0, 38, -140, 14),
+    P(60, 34, -220, 12, 8),
+    P(140, 30, -220, 12, 8),
+    P(180, 26, -150, 12, 0),
+    P(140, 22, -80, 12, -8),
+    P(60, 18, -80, 12, -8),
+    P(20, 14, -150, 12, 0),
+    P(60, 10, -220, 12, 8),
+    P(140, 6, -220, 13, 8),
+    P(200, 2, -160, 13, 0),
+    P(220, 0, -60, 14),
+    P(200, 0, 40, 14),
+  ],
+  closed: false,
+  gaps: [],
+  surfaces: [{ from: 0.45, to: 0.6, type: 'ice' }],
+  zones: [{ at: 0.7, len: 25, type: 'boost' }],
+  walls: wallsAll(1.2),
+  checkpoints: [0.28, 0.5, 0.72, 0.88],
+  start: 0.01,
+  finish: 0.99,
+  killY: -20,
+  props: [
+    { kind: 'pine', t: 0.1, side: 22, up: 0, s: 1.2, ry: 0.6 },
+    { kind: 'pine', t: 0.35, side: -24, up: 0, s: 1.5, ry: 1.9 },
+    { kind: 'pine', t: 0.6, side: 22, up: 0, s: 1.1, ry: 2.7 },
+    { kind: 'pine', t: 0.85, side: -20, up: 0, s: 1.3, ry: 0.1 },
+    { kind: 'snowrock', t: 0.5, side: 26, up: 0, s: 1.4, ry: 1.2 },
+    { kind: 'arch', t: 0.28, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.5, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.72, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.88, side: 0, up: 0, s: 1.0, ry: 0 },
+  ],
+  medals: medals(35.992),
+};

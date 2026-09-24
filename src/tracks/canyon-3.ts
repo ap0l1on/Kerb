@@ -1,0 +1,45 @@
+// Red Hollow — Pro / Canyon. A dirt hairpin that rewards a drift, boost out.
+import type { TrackDef } from '../track/types';
+import { P, medals, wallsAll } from './shared';
+
+export const CANYON_3: TrackDef = {
+  id: 'canyon-3',
+  name: 'Red Hollow',
+  group: 'pro',
+  theme: 'canyon',
+  path: [
+    P(0, 0, 0, 14),
+    P(0, 0, -150, 14),
+    P(-10, 0, -280, 13),
+    P(-60, 2, -390, 12),
+    P(-140, 3, -450, 12, 8),
+    P(-210, 3, -420, 11, 10),
+    P(-240, 2, -340, 11, 0),
+    P(-200, 1, -260, 12),
+    P(-110, 0, -220, 13),
+    P(-20, 0, -240, 13),
+    P(60, 0, -320, 13),
+    P(90, 0, -420, 14),
+    P(70, 0, -520, 14),
+  ],
+  closed: false,
+  gaps: [],
+  surfaces: [{ from: 0.3, to: 0.55, type: 'dirt' }],
+  zones: [{ at: 0.56, len: 25, type: 'boost' }],
+  walls: wallsAll(1.2),
+  checkpoints: [0.3, 0.55, 0.8],
+  start: 0.01,
+  finish: 0.99,
+  killY: -30,
+  props: [
+    { kind: 'mesa', t: 0.4, side: -50, up: 0, s: 3.0, ry: 0.8 },
+    { kind: 'mesa', t: 0.75, side: 55, up: 0, s: 2.4, ry: 2.9 },
+    { kind: 'cactus', t: 0.2, side: 16, up: 0, s: 1.0, ry: 0.2 },
+    { kind: 'cactus', t: 0.62, side: -15, up: 0, s: 1.2, ry: 1.5 },
+    { kind: 'rock', t: 0.45, side: 22, up: 0, s: 1.5, ry: 0.6 },
+    { kind: 'arch', t: 0.3, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.55, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.8, side: 0, up: 0, s: 1.0, ry: 0 },
+  ],
+  medals: medals(23.508),
+};

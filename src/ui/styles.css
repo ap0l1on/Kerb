@@ -1,0 +1,117 @@
+/* Kerb UI: bold esports/motorsport look. Dark glass over live 3D, orange accent, kerb stripes. */
+:root {
+  --bg: #0a0c10;
+  --panel: rgba(16, 19, 26, 0.86);
+  --line: #252b38;
+  --text: #f4f6fa;
+  --muted: #8b93a5;
+  --accent: #ff5a1f;
+  --ahead: #2bd576;
+  --behind: #ff4757;
+  --bronze: #cd7f32;
+  --silver: #c0c7d1;
+  --gold: #ffc83d;
+  --author: #39d0ff;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  overflow: hidden;
+}
+#app { position: fixed; inset: 0; }
+#app canvas.game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+h1, h2, h3, .num, button, .wordmark {
+  font-family: 'Chakra Petch', 'Rajdhani', Inter, sans-serif;
+}
+.num, .timer, .speed { font-style: italic; font-variant-numeric: tabular-nums; }
+/* kerb stripe motif */
+.kerb-stripe {
+  height: 8px;
+  background: repeating-linear-gradient(-45deg, #e8e2d4 0 16px, #d9482b 16px 32px);
+  border-radius: 2px;
+}
+.wordmark {
+  font-weight: 700; font-style: italic; transform: skewX(-10deg);
+  font-size: 64px; letter-spacing: 2px; line-height: 1;
+}
+.wordmark .stripe {
+  height: 10px; margin-top: 6px;
+  background: repeating-linear-gradient(-45deg, #e8e2d4 0 18px, #d9482b 18px 36px);
+}
+/* screens */
+.screen {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; z-index: 10;
+}
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 28px 32px; backdrop-filter: blur(8px); max-width: 640px; width: min(92vw, 640px);
+  max-height: 88vh; overflow-y: auto;
+}
+button {
+  background: #1a1f2b; color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px 26px; font-size: 18px; font-weight: 700; font-style: italic;
+  cursor: pointer; letter-spacing: 1px;
+}
+button:hover, button.selected { border-color: var(--accent); color: #fff; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+/* track select */
+.group-label { font-size: 20px; font-weight: 700; font-style: italic; margin: 18px 0 8px; letter-spacing: 2px; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.card {
+  background: #141824; border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+  cursor: pointer; min-width: 0;
+}
+.card.selected, .card:hover { border-color: var(--accent); }
+.card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; background: #222; display: block; }
+.card .t { font-weight: 700; font-style: italic; margin-top: 6px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .m { color: var(--muted); font-size: 12px; }
+.card.locked { opacity: 0.55; }
+/* HUD */
+#hud { position: absolute; inset: 0; pointer-events: none; z-index: 5; font-family: 'Chakra Petch', Inter, sans-serif; }
+#hud .timer {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  font-size: 32px; font-weight: 700; font-style: italic; font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 8px rgba(0,0,0,.7);
+}
+#hud .cps { position: absolute; top: 16px; right: 18px; font-size: 20px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,.7); }
+#hud .speedbox { position: absolute; right: 18px; bottom: 14px; text-align: right; text-shadow: 0 2px 8px rgba(0,0,0,.7); }
+#hud .speed { font-size: 64px; font-weight: 700; font-style: italic; line-height: 1; }
+#hud .unit { color: var(--muted); font-size: 14px; letter-spacing: 2px; }
+#hud .boostbar { width: 160px; height: 5px; background: #333; margin-top: 6px; margin-left: auto; border-radius: 3px; overflow: hidden; }
+#hud .boostbar > div { height: 100%; background: var(--author); width: 0%; }
+#hud .medals { position: absolute; left: 18px; top: 60px; font-size: 14px; text-shadow: 0 2px 8px rgba(0,0,0,.7); }
+#hud .medals .next { color: var(--gold); font-weight: 700; }
+#hud .split {
+  position: absolute; top: 34%; left: 50%; transform: translateX(-50%);
+  font-size: 44px; font-weight: 700; font-style: italic; text-shadow: 0 2px 12px rgba(0,0,0,.8);
+}
+#hud .split.ahead { color: var(--ahead); } #hud .split.behind { color: var(--behind); }
+#hud .count { position: absolute; top: 30%; left: 50%; transform: translate(-50%,-50%); font-size: 160px; font-weight: 700; font-style: italic; text-shadow: 0 4px 24px rgba(0,0,0,.8); }
+#hud .engineoff {
+  position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+  background: rgba(180,20,20,.85); border-radius: 8px; padding: 6px 14px; font-weight: 700; display: none;
+}
+#hud .hint { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); color: var(--muted); font-size: 14px; display: none; }
+#hud .fps { position: absolute; left: 18px; bottom: 14px; color: var(--muted); font-size: 13px; }
+/* finish */
+#finish .big { font-size: 96px; font-weight: 700; font-style: italic; line-height: 1; }
+#finish .medal-drop { font-size: 44px; animation: drop .5s ease-out; }
+@keyframes drop { from { transform: translateY(-40px) scale(1.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* toast */
+#toast {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--panel); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 10px 20px; z-index: 30; display: none; font-weight: 600;
+}
+/* mobile gate */
+#gate { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+/* tuning panel */
+#tuning { position: absolute; top: 10px; left: 10px; z-index: 40; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; width: 300px; max-height: 90vh; overflow-y: auto; display: none; font-size: 12px; }
+#tuning label { display: flex; justify-content: space-between; gap: 8px; margin: 4px 0; }
+#tuning input[type=range] { width: 140px; }
+@media (prefers-reduced-motion: reduce) { #finish .medal-drop { animation: none; } }

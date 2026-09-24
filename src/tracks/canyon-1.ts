@@ -1,0 +1,45 @@
+// Sandline — Rookie / Canyon. A long boost straight into one wide banked right.
+import type { TrackDef } from '../track/types';
+import { P, medals, wallsAll } from './shared';
+
+export const CANYON_1: TrackDef = {
+  id: 'canyon-1',
+  name: 'Sandline',
+  group: 'rookie',
+  theme: 'canyon',
+  path: [
+    P(0, 0, 0, 14),
+    P(0, 0, -120, 14),
+    P(0, 0, -220, 14),
+    P(8, 0, -320, 14),
+    P(40, 1, -400, 13, 6),
+    P(110, 2, -450, 13, 12),
+    P(190, 2, -450, 13, 10),
+    P(260, 1, -400, 13, 0),
+    P(290, 0, -320, 13),
+    P(280, 0, -220, 14),
+    P(230, 0, -140, 14),
+    P(150, 0, -100, 14),
+    P(80, 0, -60, 14),
+    P(40, 0, -10, 14),
+  ],
+  closed: false,
+  gaps: [],
+  surfaces: [],
+  zones: [{ at: 0.1, len: 30, type: 'boost' }],
+  walls: wallsAll(1.2),
+  checkpoints: [0.45, 0.75],
+  start: 0.01,
+  finish: 0.99,
+  killY: -30,
+  props: [
+    { kind: 'mesa', t: 0.2, side: 40, up: 0, s: 2.2, ry: 0.4 },
+    { kind: 'mesa', t: 0.55, side: -55, up: 0, s: 3.0, ry: 1.2 },
+    { kind: 'cactus', t: 0.3, side: 16, up: 0, s: 1.0, ry: 0 },
+    { kind: 'cactus', t: 0.62, side: -14, up: 0, s: 1.3, ry: 2.1 },
+    { kind: 'rock', t: 0.42, side: 20, up: 0, s: 1.0, ry: 0.7 },
+    { kind: 'arch', t: 0.45, side: 0, up: 0, s: 1.0, ry: 0 },
+    { kind: 'arch', t: 0.75, side: 0, up: 0, s: 1.0, ry: 0 },
+  ],
+  medals: medals(19.467),
+};
