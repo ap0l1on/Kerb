@@ -17,7 +17,7 @@
     "bench": "vite-node scripts/bench.ts"
   },
   "dependencies": {
-    "three": "^0.170.0"
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
