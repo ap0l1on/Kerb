@@ -68,7 +68,7 @@ export class Screens {
       `<button data-a="settings">SETTINGS</button>` +
       `<button data-a="howto">HOW TO PLAY</button></div>` +
       `<p style="color:var(--muted);font-size:13px;margin-top:18px">` +
-      `<a style="color:var(--muted)" href="https://github.com/ap0l1on/kerb">GitHub</a> · Made with Three.js · Leaderboards later</p>`;
+      `<a style="color:var(--muted)" href="https://github.com/ap0l1on/Kerb">GitHub</a> · Made with Three.js · Leaderboards later</p>`;
     this.root.appendChild(s);
     const q = (a: string) => s.querySelector(`[data-a="${a}"]`) as HTMLButtonElement;
     q('play').onclick = cb.play;

@@ -2,7 +2,7 @@
 
 A fast low-poly time-trial racer for the browser. Beat your ghost, chase the medals.
 
-**Live:** https://ap0l1on.github.io/kerb/
+**Live:** https://ap0l1on.github.io/Kerb/
 
 ## Play
 

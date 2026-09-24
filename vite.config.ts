@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/kerb/',
+  base: '/Kerb/',
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 900,

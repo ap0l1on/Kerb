@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   use: {
-    baseURL: 'http://localhost:4173/kerb/',
+    baseURL: 'http://localhost:4173/Kerb/',
     trace: 'on-first-retry',
   },
   projects: [
@@ -13,7 +13,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run preview -- --port 4173',
-    url: 'http://localhost:4173/kerb/',
+    url: 'http://localhost:4173/Kerb/',
     reuseExistingServer: !process.env.CI,
   },
 });
