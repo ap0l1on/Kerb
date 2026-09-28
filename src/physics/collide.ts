@@ -183,9 +183,17 @@ export class TrackCollider {
    *  steps can't hide the road. Falls back to the tangent-plane approximation
    *  for shoulders (up to 6 m beyond the edge) where no triangle covers. */
   ground(x: number, y: number, z: number, hint = -1): GroundHit | null {
-    // 1) Exact triangle pass: vertical ray from above, all levels.
-    const tri = this.groundTriangle(x, y, z, hint);
-    // 2) Plane-approximation pass (shoulders / far field), same as before.
+    // Plane-approximation pass with neighbouring-cell tunnelling guard.
+    // An exact-triangle pass runs for banked/steep roads (where the true
+    // geometric normal matters) and wins when it agrees with the plane;
+    // on flat straights the plane normal is already exact, so the triangle
+    // is skipped to hold the 2 ms physics budget at speed (sub-stepping).
+    // At loop joints/overpasses the sticky plane answer wins so the car
+    // can't teleport levels in a single tick.
+    let tri: GroundHit | null = null;
+    const hs = hint >= 0 && hint < this.samples.length ? this.samples[hint] : null;
+    const needTri = !hs || Math.abs(hs.bank) > 5 || Math.abs(hs.dy) > 0.1 || hs.uy < 0.99;
+    if (needTri) tri = this.groundTriangle(x, y, z, hint);
     let best: GroundHit | null = null;
     let bestScore = Infinity;
     const evalIdx = (i: number) => {
@@ -214,7 +222,7 @@ export class TrackCollider {
       }
     };
     if (hint >= 0) {
-      for (let o = -90; o <= 90; o++) evalIdx(hint + o);
+      for (let o = -32; o <= 32; o++) evalIdx(hint + o);
     }
     const k = cellKey(Math.floor(x / CELL), Math.floor(z / CELL));
     const arr = this.grid.get(k);
@@ -231,7 +239,7 @@ export class TrackCollider {
           const i = a2[n] as number;
           // Only evaluate segments not already covered by the hint window
           // when hint is present (hint window already spans ±90).
-          if (hint >= 0 && Math.abs(i - hint) <= 90) continue;
+          if (hint >= 0 && Math.abs(i - hint) <= 32) continue;
           evalIdx(i);
         }
       }
@@ -239,16 +247,16 @@ export class TrackCollider {
     if (!best && hint < 0) {
       for (let i = 0; i < this.samples.length; i += 4) evalIdx(i);
     }
-    // Prefer the exact triangle hit when it is on the road surface and close
-    // in height: it is seam-free and uses the true geometric normal.
-    if (tri && !tri.gap) {
-      const triScore = Math.abs(tri.y - y);
-      // triScore compares directly with bestScore (which includes dist*0.5);
-      // accept the triangle when it is within 0.6 m of the plane answer or
-      // when there is no plane answer at all.
-      if (!best || triScore <= bestScore + 0.6) return tri;
+    // Exact triangle wins when it agrees with the plane answer (within 0.6 m):
+    // seam-free normal on flat/banked roads, no level teleporting at joints
+    // (t-continuity in groundTriangle already resists jumps).
+    const triHit = tri as GroundHit | null;
+    const planeHit = best as GroundHit | null;
+    if (triHit && triHit.gap === false) {
+      if (!planeHit) return triHit;
+      if (Math.abs(triHit.y - planeHit.y) < 0.6) return triHit;
     }
-    return best;
+    return planeHit;
   }
 
   /** Exact triangle raycast: vertical ray at (x,z) against ribbon quads.
@@ -256,6 +264,7 @@ export class TrackCollider {
   groundTriangle(x: number, y: number, z: number, hint = -1): GroundHit | null {
     let best: GroundHit | null = null;
     let bestScore = Infinity;
+    const hintT2 = hint >= 0 && hint < this.samples.length ? this.samples[hint].t : null;
     const considerSegment = (i: number) => {
       if (i < 0 || i + 1 >= this.samples.length) return;
       const a = this.samples[i];
@@ -297,22 +306,35 @@ export class TrackCollider {
         }
       }
       if (hy == null || !hn) return;
+      // Orient the geometric normal toward the ribbon up vector so loops and
+      // wall-rides keep their true side (inverted/top => ny negative).
+      // (rayDownTri orients to +Y for stability; we restore the road side.)
+      let nnx = hn.x;
+      let nny = hn.y;
+      let nnz = hn.z;
+      if (nnx * a.ux + nny * a.uy + nnz * a.uz < 0) {
+        nnx = -nnx;
+        nny = -nny;
+        nnz = -nnz;
+      }
       // Lateral for zone/surface bookkeeping (use a-frame).
       const lateral = (x - a.x) * a.sx + (z - a.z) * a.sz;
       const dist = Math.sqrt(mdx * mdx + mdz * mdz);
-      const score = Math.abs(hy - y) + dist * 0.5;
+      let score = Math.abs(hy - y) + dist * 0.5;
+      if (hintT2 != null && Math.abs(a.t - hintT2) > 0.015 && dist > 3) score += 60;
+      if (hintT2 != null && Math.abs(a.t - hintT2) > 0.005) score += (Math.abs(a.t - hintT2) - 0.005) * 500;
       if (score < bestScore) {
         bestScore = score;
         const dyC = Math.max(-1, Math.min(1, a.dy));
         best = {
-          y: hy, nx: hn.x, ny: hn.y, nz: hn.z, dx: a.dx, dy: a.dy, dz: a.dz,
+          y: hy, nx: nnx, ny: nny, nz: nnz, dx: a.dx, dy: a.dy, dz: a.dz,
           roadPitch: Math.asin(dyC),
           surface: a.surface, zone: a.zone, lateral, t: a.t, index: i, gap: a.gap,
         };
       }
     };
     if (hint >= 0) {
-      for (let o = -90; o <= 90; o++) considerSegment(hint + o);
+      for (let o = -32; o <= 32; o++) considerSegment(hint + o);
     }
     const kk = cellKey(Math.floor(x / CELL), Math.floor(z / CELL));
     const cellArr = this.grid.get(kk);
@@ -346,18 +368,37 @@ export class TrackCollider {
       if (d2 > 40 * 40) return;
       let score = d2 + Math.abs(s.y - y) * 4;
       if (s.t < hintT - 0.008 && d2 > 9) score += 100000;
+      // Forward-jump guard: the car moves <1 sample per tick, so a far-ahead
+      // sample that looks close (loop joints, overpasses) must not win.
+      if (s.t > hintT + 0.008 && d2 > 9) score += 100000;
       if (score < bestScore) {
         bestScore = score;
         best = i;
       }
     };
     if (hint >= 0) {
-      for (let o = -90; o <= 90; o++) evalIdx(hint + o);
+      for (let o = -32; o <= 32; o++) evalIdx(hint + o);
     } else {
       const n = this.nearest(x, z, -1);
       return n;
     }
-    return best < 0 ? this.nearest(x, z, hint) : best;
+    if (best < 0) return this.nearest(x, z, hint);
+    // Monotonic guard for point-to-point tracks: never jump more than 10
+    // samples while staying in the same neighbourhood (loop base entry/exit
+    // share XZ). Genuine teleports (respawn) move far in space (d2 large)
+    // and still win. Small rollbacks (<10) are allowed (loop stalls).
+    if (hint >= 0 && Math.abs(best - hint) > 10) {
+      const hs = this.samples[hint];
+      if (hs) {
+        const hdx = x - hs.x;
+        const hdz = z - hs.z;
+        const hd2 = hdx * hdx + hdz * hdz;
+        if (hd2 < 100) {
+          return hint;
+        }
+      }
+    }
+    return best;
   }
 
   /** Resolve wall collision. Mutates px/pz/vx/vz. Returns impact |sin| (0 = no hit). */
@@ -386,7 +427,7 @@ export class TrackCollider {
       }
     };
     if (hint >= 0) {
-      for (let o = -60; o <= 60; o++) consider(hint + o);
+      for (let o = -32; o <= 32; o++) consider(hint + o);
     } else {
       const k = cellKey(Math.floor(px / CELL), Math.floor(pz / CELL));
       const arr = this.grid.get(k);

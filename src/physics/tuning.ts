@@ -48,7 +48,7 @@ export interface Tuning {
 
 export const TUNING: Tuning = {
   topSpeedKmh: 270,
-  accel0_100: 2.3,
+  accel0_100: 2.15,
   brake200_0: 2.2,
   reverseMaxKmh: 40,
   gravityScale: 1.6,
@@ -76,9 +76,9 @@ export const TUNING: Tuning = {
   driftEntryMs: 220,
   airRollTorque: 2.2,
   airPitchTorque: 1.6,
-  boostAccel: 16,
+  boostAccel: 9.5,
   boostTime: 1.0,
-  turboAccel: 21,
+  turboAccel: 14.5,
   turboTime: 1.2,
   boostCapKmh: 330,
   downhillCapKmh: 300,
@@ -90,7 +90,7 @@ export const TUNING: Tuning = {
   dragOverTop: 0.0015,
   rollingDrag: 0.35,
   torqueFalloff: 0.8,
-  gradeFactor: 1.7,
+  gradeFactor: 1.0,
 };
 
 export function tuningToJson(): string {

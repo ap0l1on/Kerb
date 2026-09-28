@@ -131,13 +131,26 @@ export class Input {
     // along travel, so world +x appears screen-LEFT: screen-right (D) must
     // produce negative steer. Keep this mapping in exactly one place.
     const target = (left ? 1 : 0) + (right ? -1 : 0);
-    // Steer ramp: 0->full in 80ms, return in 60ms.
-    const upRate = dt / 0.08;
-    const downRate = dt / 0.06;
-    const rate = target !== 0 ? upRate : downRate;
+    // Keyboard ramp: 0->full in 110 ms, full->0 in 80 ms. Switching left<->right
+    // goes through centre at the RETURN rate (no instant snap). Frame-rate
+    // independent: all smoothing lives in the tick with fixed dt, so 30/60/144
+    // fps give identical steer over time.
+    const upRate = dt / 0.11;
+    const downRate = dt / 0.08;
+    let rate: number;
+    if (target === 0) {
+      rate = downRate;
+    } else if (this.steerSm !== 0 && Math.sign(target) !== Math.sign(this.steerSm)) {
+      // Direction reversal: head to centre at return rate first.
+      rate = downRate;
+    } else {
+      rate = upRate;
+    }
     if (this.steerSm < target) this.steerSm = Math.min(target, this.steerSm + rate);
     else if (this.steerSm > target) this.steerSm = Math.max(target, this.steerSm - rate);
-    let steer = this.steerSm * this.steerSensitivity;
+    // Optional sensitivity 0.7x–1.3x, default 1.0.
+    const sens = Math.max(0.7, Math.min(1.3, this.steerSensitivity));
+    let steer = this.steerSm * sens;
     steer = Math.max(-1, Math.min(1, steer));
     let throttle = k.has(b.up) || k.has(ALT_UP) || k.has('Space') ? 1 : 0;
     let brake = k.has(b.down) || k.has(ALT_DOWN) ? 1 : 0;

@@ -235,7 +235,7 @@ export class Screens {
       const bindings: KeyBindings = { ...(s.bindings as unknown as KeyBindings | null ?? {}), ...DEFAULT_BINDINGS, ...(s.bindings ?? {}) } as KeyBindings;
       const rows = (Object.keys(DEFAULT_BINDINGS) as (keyof KeyBindings)[])
         .map((k) => `<div><button data-k="${k}">${k}: ${(bindings[k] as string) ?? ''}</button></div>`).join('');
-      tab.innerHTML = `${rows}<br/><label>Steering sensitivity <input data-k="sensitivity" type="range" min="0.5" max="2" step="0.1" value="${s.sensitivity}"/></label>
+      tab.innerHTML = `${rows}<br/><label>Steering sensitivity <input data-k="sensitivity" type="range" min="0.7" max="1.3" step="0.05" value="${s.sensitivity}"/></label>
         <div style="color:var(--muted);font-size:12px">Click a button, then press a key. Conflicts are highlighted.</div>`;
       tab.querySelectorAll('[data-k]').forEach((el) => {
         const k = (el as HTMLElement).dataset.k!;

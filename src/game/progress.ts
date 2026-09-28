@@ -80,7 +80,7 @@ function sanitize(raw: unknown): Progress | null {
     for (const k of ['master', 'engine', 'sfx'] as const) {
       if (typeof s[k] === 'number' && (s[k] as number) >= 0 && (s[k] as number) <= 1) st[k] = s[k] as number;
     }
-    if (typeof s.sensitivity === 'number' && (s.sensitivity as number) >= 0.5 && (s.sensitivity as number) <= 2) {
+    if (typeof s.sensitivity === 'number' && (s.sensitivity as number) >= 0.7 && (s.sensitivity as number) <= 1.3) {
       st.sensitivity = s.sensitivity as number;
     }
     if (s.bindings === null || (typeof s.bindings === 'object' && s.bindings !== null)) {

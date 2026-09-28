@@ -23,6 +23,7 @@ import { Hud } from './ui/hud';
 import { Screens, type FinishData } from './ui/screens';
 import { toggleTuningPanel } from './ui/tuningPanel';
 import { track } from './ui/analytics';
+import { Telemetry } from './debug/telemetry';
 
 type Mode = 'title' | 'tracks' | 'race' | 'replay' | 'settings' | 'howto';
 type SettingsFrom = 'title' | 'pause' | 'tracks';
@@ -78,6 +79,9 @@ class Game {
   wasBoosting = false;
   titleAngle = 0;
   app: HTMLElement;
+  telemetry = new Telemetry();
+  lastInput: InputFrame = { steer: 0, throttle: 0, brake: 0, respawn: false, checkpoint: false };
+  lastSteps = 0;
 
   constructor() {
     this.app = document.getElementById('app')!;
@@ -113,8 +117,28 @@ class Game {
     const pose = this.collider!.startPose(this.def!.start);
     this.titleCar(pose);
     this.showTitle();
+    // Dev telemetry overlay + old-ghost purge (physics update clears ghosts).
+    this.telemetry.mount(this.app);
+    this.purgeOldGhosts();
     track('boot');
     requestAnimationFrame((t) => this.frame(t));
+  }
+
+  /** Ghost format bump: old personal ghosts desync after physics changes. */
+  purgeOldGhosts(): void {
+    let cleared = 0;
+    for (const id of Object.keys(this.progress.tracks)) {
+      const g = this.progress.tracks[id]?.bestGhost;
+      if (typeof g === 'string' && g.length > 0 && !decodeGhost(g)) {
+        this.progress.tracks[id]!.bestGhost = null;
+        cleared++;
+      }
+    }
+    if (cleared > 0) {
+      saveProgress(this.progress);
+      // Toast once the title screen is up.
+      window.setTimeout(() => this.screens.toast('Physics updated. Old ghosts cleared.'), 600);
+    }
   }
 
   // ---------- settings ----------
@@ -148,6 +172,16 @@ class Game {
       if (e.code === 'F2' && import.meta.env.DEV) {
         e.preventDefault();
         toggleTuningPanel(this.app);
+      }
+      if (e.code === 'F4' && import.meta.env.DEV) {
+        e.preventDefault();
+        const on = this.telemetry.toggle();
+        this.screens.toast(on ? 'Telemetry on' : 'Telemetry off');
+      }
+      if (e.code === 'F5' && import.meta.env.DEV) {
+        e.preventDefault();
+        const logging = this.telemetry.toggleLogging();
+        this.screens.toast(logging ? 'CSV logging…' : 'CSV saved');
       }
       if (e.code === 'F3') {
         e.preventDefault();
@@ -367,6 +401,7 @@ class Game {
     // Snap camera behind car.
     const c = this.race.car;
     this.cam.camera.position.set(c.x - Math.sin(c.yaw) * 6, c.y + 2.5, c.z - Math.cos(c.yaw) * 6);
+    this.cam.reset(c.x, c.y, c.z, c.yaw);
     window.location.hash = `t=${id}`;
     track('race_start', { track: id });
   }
@@ -647,20 +682,24 @@ class Game {
 
     // Fixed-step physics.
     if (!this.paused) {
-      const { alpha } = this.loop.frame(dt, (h) => {
+      const frameMs = dt * 1000;
+      const { steps } = this.loop.frame(dt, (h) => {
         const inp = quantizeInput(this.input.sample(h));
         this.lastSteer = inp.steer;
+        this.lastInput = { ...inp };
         // Record only racing ticks (ghost alignment starts at GO).
         if (this.race!.phase === 'racing') this.recorder.record(inp);
         this.prevCar = { ...this.race!.car };
         this.race!.step(inp);
+        if (import.meta.env.DEV) this.telemetry.recordTick(this.race!.car, inp, this.collider!, h);
         // Ghost in lockstep.
         if (this.ghostRace && this.ghostIdx < this.ghostFrames.length && this.race!.phase === 'racing') {
           this.ghostRace.step(this.ghostFrames[this.ghostIdx]!);
           this.ghostIdx++;
         }
       });
-      void alpha;
+      this.lastSteps = steps;
+      void frameMs;
       const c = this.race.car;
       // Render interpolation between prev and current.
       const a = this.loop.acc / FIXED_DT;
@@ -686,9 +725,23 @@ class Game {
         const cy = Math.cos(c.yaw);
         this.cam.camera.position.set(c.x - sy * 7.0, c.y + 2.4, c.z - cy * 7.0);
         this.cam.camera.lookAt(c.x + sy * 6, c.y + 1.0, c.z + cy * 6);
+        this.cam.followYaw = c.yaw;
+        this.cam.lookSm.set(c.x + sy * 6, c.y + 1.0, c.z + cy * 6);
       } else {
         this.cam.update(dt, c.x, c.y, c.z, c.yaw, c.speedKmh, c.boostT > 0 && c.boostKind === 'turbo', c.landingShake, () => 1);
         c.landingShake = Math.max(0, c.landingShake - dt * 2);
+      }
+      if (import.meta.env.DEV) {
+        const k = this.input.keys;
+        const b = this.input.bindings;
+        const raw = (k.has(b.left) || k.has('ArrowLeft') ? 1 : 0) + (k.has(b.right) || k.has('ArrowRight') ? -1 : 0);
+        this.telemetry.update(c, this.lastInput, this.collider!, {
+          steps: this.lastSteps,
+          frameMs: dt * 1000,
+          rawSteer: raw,
+          throttle: this.lastInput.throttle,
+          brake: this.lastInput.brake,
+        });
       }
       // HUD.
       this.hud.setTimer(this.race.phase === 'finished' ? this.race.finishTime : this.race.time);

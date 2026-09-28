@@ -40,5 +40,5 @@ export const NEON_1: TrackDef = {
     { kind: 'glowarch', t: 0.55, side: 0, up: 0, s: 1.0, ry: 0 },
     { kind: 'glowarch', t: 0.8, side: 0, up: 0, s: 1.0, ry: 0 },
   ],
-  medals: medals(24.3),
+  medals: medals(29.500),
 };

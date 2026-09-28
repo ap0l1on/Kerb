@@ -37,5 +37,5 @@ export const ALPINE_1: TrackDef = {
     { kind: 'arch', t: 0.6, side: 0, up: 0, s: 1.0, ry: 0 },
     { kind: 'arch', t: 0.85, side: 0, up: 0, s: 1.0, ry: 0 },
   ],
-  medals: medals(23.733),
+  medals: medals(27.092),
 };

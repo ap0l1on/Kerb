@@ -41,5 +41,5 @@ export const CANYON_1: TrackDef = {
     { kind: 'arch', t: 0.45, side: 0, up: 0, s: 1.0, ry: 0 },
     { kind: 'arch', t: 0.75, side: 0, up: 0, s: 1.0, ry: 0 },
   ],
-  medals: medals(19.467),
+  medals: medals(27.242),
 };

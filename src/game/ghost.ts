@@ -2,7 +2,7 @@
 // A 60 s run (7200 ticks) is ~1-3 KB. Times are always re-simulated, never trusted.
 import type { InputFrame } from '../core/input';
 
-export const GHOST_VERSION = 2;
+export const GHOST_VERSION = 3;
 const MAX_TICKS = 60 * 120 + 120 * 10; // 70 s cap
 const MAX_CODE_LEN = 32768;
 

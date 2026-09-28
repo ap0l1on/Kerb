@@ -43,5 +43,5 @@ export const COAST_1: TrackDef = {
     { kind: 'arch', t: 0.55, side: 0, up: 0, s: 1.0, ry: 0 },
     { kind: 'arch', t: 0.8, side: 0, up: 0, s: 1.0, ry: 0 },
   ],
-  medals: medals(18.558),
+  medals: medals(22.908),
 };

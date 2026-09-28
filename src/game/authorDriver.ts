@@ -83,7 +83,7 @@ export function driveInput(race: Race): InputFrame {
       break;
     }
   }
-  if (loopAhead) target = Math.max(target, 55);
+  if (loopAhead) target = Math.max(target, 70);
   // Slow down on ice: grip is quartered, so cornering speed halves.
   const surfAhead = samples[Math.min(samples.length - 1, car.sampleIndex + 30)]?.surface;
   if (surfAhead === 'ice') target = Math.min(target, 30);
